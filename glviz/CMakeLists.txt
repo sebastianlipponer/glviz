@@ -1,3 +1,5 @@
+add_subdirectory(embed_resource)
+
 include(GLvizShaderWrapCpp)
 
 # GLviz shader.
