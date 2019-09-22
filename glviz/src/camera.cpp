@@ -34,6 +34,7 @@ Camera::Camera()
       m_trackball(new Trackball())
 {
     set_perspective(60.0f, 4.0f / 3.0f, 0.25f, 10.0f);
+    set_modelview_matrix_from_orientation();
 }
 
 Camera::~Camera()
