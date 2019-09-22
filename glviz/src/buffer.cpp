@@ -71,7 +71,7 @@ glVertexArray::glVertexArray()
 
 glVertexArray::~glVertexArray()
 {
-    glDeleteBuffers(1, &m_vertex_array_obj);
+    glDeleteVertexArrays(1, &m_vertex_array_obj);
 }
 
 void
