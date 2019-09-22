@@ -1,4 +1,4 @@
-include(shader_wrap_cpp)
+include(GLvizShaderWrapCpp)
 
 # GLviz shader.
 file(GLOB OPENGL_SHADERS src/shader/*)
