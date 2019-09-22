@@ -1,8 +1,12 @@
 # GLviz
 
-GLviz is a small collection of C++ classes and GLSL shaders to facilitate the development of OpenGL demos. It is built on top of [CMake](http://www.cmake.org/), [SDL](http://libsdl.org), [GLEW](http://glew.sourceforge.net), [Eigen](http://eigen.tuxfamily.org/), and [AntTweakBar](http://anttweakbar.sourceforge.net/) and requires at least OpenGL 3.3. GLviz has been tested on a NVIDIA GTX 680 GPU using driver version 347.52 on Windows (compiled with MSVC 2013) and 340.65 on Linux (compiled with GCC 4.9). It includes all external dependencies to make compilation on either Windows or Linux as simple and convenient as possible.
+GLviz is a small collection of C++ classes and GLSL shaders to facilitate the development of OpenGL demos. It is built on top of [CMake](http://www.cmake.org/), [SDL](http://libsdl.org), [GLEW](http://glew.sourceforge.net), [Eigen](http://eigen.tuxfamily.org/), and [ImGui](https://github.com/ocornut/imgui) and requires at least OpenGL 3.3. GLviz has been tested on a NVIDIA GTX 1080 Ti GPU using driver version 436.02 on Windows 10 (compiled with MSVC 2019) and 418.74 on Linux (compiled with GCC 8.3). It includes a script to easily download and build all external dependencies in the project directory to make compilation on either Windows or Linux as simple and convenient as possible.
 
 **Author**: [Sebastian Lipponer](http://sebastianlipponer.de), **License**: MIT
+
+## Build
+
+Before running CMake run either build-extern.cmd or build-extern.sh to download and build the necessary external dependencies in the .extern directory.
 
 ## Features
 
