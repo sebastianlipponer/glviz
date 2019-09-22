@@ -1,5 +1,3 @@
-# Use static anttweakbar.
-add_definitions(-DTW_NO_LIB_PRAGMA -DTW_STATIC)
 
 # Use static GLEW.
 add_definitions(-DGLEW_STATIC)

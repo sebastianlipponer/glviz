@@ -22,8 +22,6 @@
 
 #include "camera.hpp"
 
-#include <cmath>
-
 using namespace Eigen;
 
 namespace GLviz

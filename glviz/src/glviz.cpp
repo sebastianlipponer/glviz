@@ -25,9 +25,12 @@
 
 #include "camera.hpp"
 
+#include <imgui.h>
+#include <imgui_impl_sdl.h>
+#include <imgui_impl_opengl3.h>
+
 #include <GL/glew.h>
-#include <SDL/SDL.h>
-#include <AntTweakBar.h>
+#include <SDL2/SDL.h>
 
 #include <iostream>
 #include <cstdlib>
@@ -47,15 +50,16 @@ SDL_Window* m_sdl_window;
 SDL_GLContext m_gl_context;
 
 std::function<void ()>                      m_display_callback;
+std::function<void ()>                      m_gui_callback;
 std::function<void (unsigned int)>          m_timer_callback;
-std::function<void(int width, int height)>  m_reshape_callback;
+std::function<void (int width, int height)> m_reshape_callback;
+std::function<void (SDL_Keycode)>           m_keyboard_callback;
 std::function<void ()>                      m_close_callback;
 
-TwBar*   m_bar;
 Camera*  m_camera;
 
 void
-reshapeFunc(int width, int height)
+reshape(int width, int height)
 {
     m_screen_width  = width;
     m_screen_height = height;
@@ -64,12 +68,10 @@ reshapeFunc(int width, int height)
     {
         m_reshape_callback(width, height);
     }
-
-    TwWindowSize(m_screen_width, m_screen_height);
 }
 
 void
-mouseFunc(int button, int state, int x, int y)
+mouse(int button, int state, int x, int y)
 {
     const float xf = static_cast<float>(x)
         / static_cast<float>(m_screen_width);
@@ -93,7 +95,7 @@ mouseFunc(int button, int state, int x, int y)
 }
 
 void
-motionFunc(int state, int x, int y)
+motion(int state, int x, int y)
 {
     const float xf = static_cast<float>(x)
         / static_cast<float>(m_screen_width);
@@ -122,30 +124,37 @@ process_events()
 
     while (SDL_PollEvent(&event))
     {
-        if (TwEventSDL(&event, SDL_MAJOR_VERSION, SDL_MINOR_VERSION))
-            continue;
+        ImGui_ImplSDL2_ProcessEvent(&event);
+        ImGuiIO const& io = ImGui::GetIO();
 
         switch (event.type)
         {
             case SDL_KEYDOWN:
+                if (!io.WantCaptureKeyboard && m_keyboard_callback)
+                    m_keyboard_callback(event.key.keysym.sym);
                 break;
             case SDL_KEYUP:
                 break;
             case SDL_WINDOWEVENT:
                 if (event.window.event == SDL_WINDOWEVENT_RESIZED)
-                    reshapeFunc(event.window.data1, event.window.data2);
+                    reshape(event.window.data1, event.window.data2);
                 break;
             case SDL_MOUSEBUTTONUP:
-                SDL_CaptureMouse(SDL_FALSE);
+                if (!io.WantCaptureMouse)
+                    SDL_CaptureMouse(SDL_FALSE);
                 break;
             case SDL_MOUSEBUTTONDOWN:
-                SDL_CaptureMouse(SDL_TRUE);
-                mouseFunc(event.button.button, event.button.state,
-                    event.button.x, event.button.y);
+                if (!io.WantCaptureMouse)
+                {
+                    SDL_CaptureMouse(SDL_TRUE);
+                    mouse(event.button.button, event.button.state,
+                        event.button.x, event.button.y);
+                }
                 break;
             case SDL_MOUSEMOTION:
-                motionFunc(event.motion.state, event.motion.x,
-                    event.motion.y);
+                if (!io.WantCaptureMouse)
+                    motion(event.motion.state, event.motion.x,
+                        event.motion.y);
                 break;
             case SDL_QUIT:
                 quit = true;
@@ -182,16 +191,16 @@ set_camera(Camera& camera)
     m_camera = &camera;
 }
 
-TwBar*
-twbar()
-{
-    return m_bar;
-}
-
 void
 display_callback(std::function<void ()> display_callback)
 {
     m_display_callback = display_callback;
+}
+
+void
+reshape_callback(std::function<void (int width, int height)> reshape_callback)
+{
+    m_reshape_callback = reshape_callback;
 }
 
 void
@@ -203,15 +212,21 @@ timer_callback(std::function<void (unsigned int)> timer_callback,
 }
 
 void
-reshape_callback(std::function<void(int width, int height)> reshape_callback)
-{
-    m_reshape_callback = reshape_callback;
-}
-
-void
 close_callback(std::function<void ()> close_callback)
 {
     m_close_callback = close_callback;
+}
+
+void
+gui_callback(std::function<void()> gui_callback)
+{
+    m_gui_callback = gui_callback;
+}
+
+void
+keyboard_callback(std::function<void (SDL_Keycode)> keyboard_callback)
+{
+    m_keyboard_callback = keyboard_callback;
 }
 
 void
@@ -328,23 +343,10 @@ init(int argc, char* argv[])
     cout_glew_version();
     std::cout << std::endl;
 
-    // Initialize AntTweakBar.
-    {
-        int tw_init_ok = TwInit(TW_OPENGL_CORE, NULL);
-
-        if (!tw_init_ok)
-        {
-            std::cerr << TwGetLastError() << std::endl;
-            exit(EXIT_FAILURE);
-        }
-
-        m_bar = TwNewBar("TweakBar");
-        TwWindowSize(m_screen_width, m_screen_height);
-
-        TwDefine(" GLOBAL help='some useful text' ");
-        TwDefine(" TweakBar size='275 400' color='100 100 100' \
-            refresh=0.01 ");
-    }
+    // Initialize ImGui.
+    ImGui::CreateContext();
+    ImGui_ImplSDL2_InitForOpenGL(m_sdl_window, m_gl_context);
+    ImGui_ImplOpenGL3_Init();
 }
 
 int
@@ -353,7 +355,7 @@ exec(Camera& camera)
     m_camera = &camera;
     Uint32 last_time = 0;
 
-    reshapeFunc(m_screen_width, m_screen_height);
+    reshape(m_screen_width, m_screen_height);
 
     while (!process_events())
     {
@@ -369,20 +371,20 @@ exec(Camera& camera)
             }
         }
 
-        if (m_display_callback)
-        {
-            m_display_callback();
-        }
+        if (m_display_callback) { m_display_callback(); }
 
-        TwDraw();
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplSDL2_NewFrame(m_sdl_window);
+        ImGui::NewFrame();
+
+        if (m_gui_callback) { m_gui_callback(); }
+        ImGui::Render();
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
         SDL_GL_SwapWindow(m_sdl_window);
     }
 
-    TwTerminate();
-    if (m_close_callback)
-    {
-        m_close_callback();
-    }
+    if (m_close_callback) { m_close_callback(); }
 
     SDL_GL_DeleteContext(m_gl_context);
     SDL_DestroyWindow(m_sdl_window);

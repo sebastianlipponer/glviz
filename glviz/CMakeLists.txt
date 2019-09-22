@@ -62,18 +62,19 @@ include_directories(
 
 add_dependencies(glviz
     shader
-    anttweakbar
     SDL2main
     SDL2-static
     glew
 )
 
+find_package(ImGui REQUIRED CONFIG)
+find_package(glew REQUIRED CONFIG)
+find_package(SDL2 REQUIRED CONFIG)
 find_package(OpenGL REQUIRED)
 
 set(glviz_INCLUDE_DIRS
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${eigen_INCLUDE_DIRS}
-    ${anttweakbar_INCLUDE_DIRS}
     ${sdl_INCLUDE_DIRS}
     ${glew_INCLUDE_DIRS}
     ${OPENGL_INCLUDE_DIRS}
@@ -82,8 +83,14 @@ set(glviz_INCLUDE_DIRS
 set(glviz_LIBRARIES
     glviz
     shader
-    ${anttweakbar_LIBRARIES}
     ${sdl_LIBRARIES}
-    ${glew_LIBRARIES}
     ${OPENGL_LIBRARIES}
     CACHE INTERNAL "glviz library")
+
+target_link_libraries(glviz PUBLIC
+    ImGui::imgui
+    ImGui::imgui_sdl
+    GLEW::glew_s
+    SDL2::SDL2main
+    SDL2::SDL2-static
+)

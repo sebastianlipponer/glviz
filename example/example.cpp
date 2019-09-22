@@ -40,7 +40,7 @@ using namespace Eigen;
 namespace
 {
 
-GLviz::Camera camera;
+GLviz::Camera g_camera;
 
 float g_time(0.0f);
 bool g_stop_simulation(true);
@@ -116,7 +116,7 @@ struct MyViz
         uniform_wireframe.bind_buffer_base(2);
         uniform_sphere.bind_buffer_base(3);
 
-        camera.translate(Eigen::Vector3f(0.0f, 0.0f, -2.0f));
+        g_camera.translate(Eigen::Vector3f(0.0f, 0.0f, -2.0f));
     }
 
     void draw_mesh3(GLsizei nf)
@@ -172,17 +172,17 @@ struct MyViz
 
 std::unique_ptr<MyViz> viz;
 
-std::vector<Eigen::Vector3f>               m_ref_vertices;
-std::vector<Eigen::Vector3f>               m_ref_normals;
+std::vector<Eigen::Vector3f>               g_ref_vertices;
+std::vector<Eigen::Vector3f>               g_ref_normals;
 
-std::vector<Eigen::Vector3f>               m_vertices;
-std::vector<Eigen::Vector3f>               m_normals;
-std::vector<std::array<unsigned int, 3> >  m_faces;
+std::vector<Eigen::Vector3f>               g_vertices;
+std::vector<Eigen::Vector3f>               g_normals;
+std::vector<std::array<unsigned int, 3> >  g_faces;
 
 void load_triangle_mesh(std::string const& filename);
 
 void
-displayFunc()
+display()
 {
     glEnable(GL_MULTISAMPLE);
     glEnable(GL_DEPTH_TEST);
@@ -192,13 +192,13 @@ displayFunc()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     viz->vertex_array_buffer.set_buffer_data(3 * sizeof(GLfloat)
-        * m_vertices.size(), m_vertices.front().data());
+        * g_vertices.size(), g_vertices.front().data());
     viz->normal_array_buffer.set_buffer_data(3 * sizeof(GLfloat)
-        * m_normals.size(), m_normals.front().data());
+        * g_normals.size(), g_normals.front().data());
     viz->index_array_buffer.set_buffer_data(3 * sizeof(GLuint)
-        * m_faces.size(), m_faces.front().data());
+        * g_faces.size(), g_faces.front().data());
 
-    viz->uniform_camera.set_buffer_data(camera);
+    viz->uniform_camera.set_buffer_data(g_camera);
 
     if (g_enable_mesh3)
     {
@@ -209,40 +209,34 @@ displayFunc()
         viz->uniform_wireframe.set_buffer_data(g_wireframe, screen);        
 
         viz->program_mesh3.set_smooth(g_shading_method != 0);
-        viz->draw_mesh3(static_cast<GLsizei>(3 * m_faces.size()));
+        viz->draw_mesh3(static_cast<GLsizei>(3 * g_faces.size()));
     }
 
     if (g_enable_points)
     {
         viz->uniform_material.set_buffer_data(g_points_material);
-        GLviz::Frustum view_frustum = camera.get_frustum();
+        GLviz::Frustum view_frustum = g_camera.get_frustum();
         float g_projection_radius = view_frustum.near_() * (GLviz::screen_height()
             / (view_frustum.top() - view_frustum.bottom()));
 
         viz->uniform_sphere.set_buffer_data(g_point_radius, g_projection_radius);
 
-        viz->draw_spheres(static_cast<GLsizei>(m_vertices.size()));
+        viz->draw_spheres(static_cast<GLsizei>(g_vertices.size()));
     }
 }
 
 void
-reshapeFunc(int width, int height)
+reshape(int width, int height)
 {
     const float aspect = static_cast<float>(width) /
         static_cast<float>(height);
 
     glViewport(0, 0, width, height);
-    camera.set_perspective(60.0f, aspect, 0.005f, 5.0f);
+    g_camera.set_perspective(60.0f, aspect, 0.005f, 5.0f);
 }
 
 void
-closeFunc()
-{
-    viz = nullptr;
-}
-
-void
-timerFunc(int delta_t_msec)
+timer(int delta_t_msec)
 {
     float delta_t_sec = static_cast<float>(delta_t_msec) / 1000.0f;
 
@@ -254,27 +248,81 @@ timerFunc(int delta_t_msec)
         const float a = 0.03f;
         const float v = 10.0f;
 
-        for (unsigned int i(0); i < m_vertices.size(); ++i)
+        for (unsigned int i(0); i < g_vertices.size(); ++i)
         {
-            const float x = m_ref_vertices[i].x() + m_ref_vertices[i].y()
-                + m_ref_vertices[i].z();
+            const float x = g_ref_vertices[i].x() + g_ref_vertices[i].y()
+                + g_ref_vertices[i].z();
 
             const float u = 5.0f * (x - 0.75f * std::sin(2.5f * g_time));
             const float w = (a / 2.0f) * (1.0f
                 + std::sin(k * x + v * g_time));
 
-            m_vertices[i] = m_ref_vertices[i] + (std::exp(-u * u) * w)
-                * m_ref_normals[i];
+            g_vertices[i] = g_ref_vertices[i] + (std::exp(-u * u) * w)
+                * g_ref_normals[i];
         }
 
         GLviz::set_vertex_normals_from_triangle_mesh(
-            m_vertices, m_faces, m_normals);
+            g_vertices, g_faces, g_normals);
     }
 }
 
-void TW_CALL reset_simulation(void*)
+void
+close()
 {
-    g_time = 0.0f;
+    viz = nullptr;
+}
+
+void
+gui()
+{
+    ImGui::Begin("GLviz", nullptr);
+    ImGui::SetWindowPos(ImVec2(3.0f, 3.0f), ImGuiCond_Once);
+    ImGui::SetWindowSize(ImVec2(265.0f, 345.0f), ImGuiCond_Once);
+
+    ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth() * 0.55f);
+
+    ImGui::Text("time\t %.3f", g_time);
+    ImGui::Text("fps \t %.1f fps", ImGui::GetIO().Framerate);
+
+    if (ImGui::CollapsingHeader("Mesh", nullptr, ImGuiTreeNodeFlags_DefaultOpen))
+    {
+        ImGui::Checkbox("Draw Triangle Mesh", &g_enable_mesh3);
+        ImGui::ColorEdit3("Mesh Color", g_mesh_material);
+        ImGui::DragFloat("Mesh Shininess", &g_mesh_material[3],
+            1e-2f, 1e-12f, 1000.0f);
+        ImGui::Combo("Mesh Shading", &g_shading_method, "Flat\0Phong\0\0");
+
+        ImGui::Separator();
+
+        ImGui::Checkbox("Draw Wireframe", &g_enable_wireframe);
+        ImGui::ColorEdit3("Wireframe Color", g_wireframe);
+    }
+
+    if (ImGui::CollapsingHeader("Points", nullptr, ImGuiTreeNodeFlags_DefaultOpen))
+    {
+        ImGui::Checkbox("Draw Points", &g_enable_points);
+        ImGui::DragFloat("Points Radius", &g_point_radius,
+            1e-5f, 0.0f, 0.1f, "%.4f");
+        ImGui::ColorEdit3("Points Color", g_points_material);
+        ImGui::DragFloat("Points Shininess", &g_points_material[3],
+            1e-2f, 1e-12f, 1000.0f);
+    }
+
+    ImGui::End();
+}
+
+void
+keyboard(SDL_Keycode key)
+{
+    switch (key)
+    {
+        case SDLK_r:    g_time = 0.0f;                             break;
+        case SDLK_SPACE:  g_stop_simulation = !g_stop_simulation;  break;
+        case SDLK_1:    g_enable_mesh3 = !g_enable_mesh3;          break;
+        case SDLK_2:    g_enable_points = !g_enable_points;        break;
+        case SDLK_5:    g_shading_method = (g_shading_method + 1) % 2; break;
+        case SDLK_w:    g_enable_wireframe = !g_enable_wireframe;  break;
+    }
 }
 
 void
@@ -286,7 +334,7 @@ load_triangle_mesh(std::string const& filename)
     if (input.good())
     {
         input.close();
-        GLviz::load_raw(filename, m_vertices, m_faces);
+        GLviz::load_raw(filename, g_vertices, g_faces);
     }
     else
     {
@@ -295,17 +343,17 @@ load_triangle_mesh(std::string const& filename)
         std::ostringstream fqfn;
         fqfn << path_resources;
         fqfn << filename;
-        GLviz::load_raw(fqfn.str(), m_vertices, m_faces);
+        GLviz::load_raw(fqfn.str(), g_vertices, g_faces);
     }
 
-    std::cout << "  #vertices " << m_vertices.size() << std::endl;
-    std::cout << "  #faces    " << m_faces.size() << std::endl;
+    std::cout << "  #vertices " << g_vertices.size() << std::endl;
+    std::cout << "  #faces    " << g_faces.size() << std::endl;
 
     GLviz::set_vertex_normals_from_triangle_mesh(
-        m_vertices, m_faces, m_normals);
+        g_vertices, g_faces, g_normals);
 
-    m_ref_vertices = m_vertices;
-    m_ref_normals = m_normals;
+    g_ref_vertices = g_vertices;
+    g_ref_normals = g_normals;
 }
 
 }
@@ -327,69 +375,12 @@ main(int argc, char* argv[])
         std::exit(EXIT_FAILURE);
     }
 
-    // Setup AntTweakBar.
-    {
-        TwBar* bar = GLviz::twbar();
+    GLviz::display_callback(display);
+    GLviz::reshape_callback(reshape);
+    GLviz::timer_callback(timer, 15);
+    GLviz::close_callback(close);
+    GLviz::gui_callback(gui);
+    GLviz::keyboard_callback(keyboard);
 
-        TwAddVarRO(bar, "time", TW_TYPE_FLOAT,
-            &g_time, " precision=3 label='t in sec' group='Simulation' ");
-
-        TwAddButton(bar, "Reset",
-            reset_simulation, NULL,
-            " key=r help='Reset simulation' group='Simulation' ");
-
-        TwAddVarRW(bar, "Stop", TW_TYPE_BOOLCPP,
-            &g_stop_simulation,
-            " key=SPACE help='Stop simulation' group='Simulation' ");
-
-        TwAddVarRW(bar, "Draw Triangle Mesh", TW_TYPE_BOOLCPP,
-            &g_enable_mesh3,
-            " key=1 help='Draw Triangle Mesh' group='Triangle Mesh' ");
-
-        TwType shading_type = TwDefineEnumFromString("shading_type", "Flat,Phong");
-        TwAddVarRW(bar, "Shading", shading_type, &g_shading_method, " key=5 group='Triangle Mesh' ");
-
-        TwAddSeparator(bar, NULL, " group='Triangle Mesh' ");
-
-        TwAddVarRW(bar, "Wireframe", TW_TYPE_BOOLCPP,
-            &g_enable_wireframe,
-            " key=w help='Draw Wireframe' group='Triangle Mesh' ");
-
-        TwAddVarRW(bar, "Wireframe Color", TW_TYPE_COLOR3F,
-            g_wireframe,
-            " help='Wireframe Color' group='Triangle Mesh' ");
-
-        TwAddSeparator(bar, NULL, " group='Triangle Mesh' ");
-
-        TwAddVarRW(bar, "Mesh Material", TW_TYPE_COLOR3F,
-            g_mesh_material,
-            " help='Mesh Ambient' group='Triangle Mesh' ");
-
-        TwAddVarRW(bar, "Mesh Shininess", TW_TYPE_FLOAT,
-            &g_mesh_material[3],
-            " min=1e-12 max=1000 help='Mesh Shininess' group='Triangle Mesh' ");
-
-        TwAddVarRW(bar, "Draw Points", TW_TYPE_BOOLCPP,
-            &g_enable_points,
-            " key=2 help='Draw Points' group='Points' ");
-
-        TwAddVarRW(bar, "Radius", TW_TYPE_FLOAT,
-            &g_point_radius,
-            " min=0 max=0.1 step=0.0001 key=2 help='Radius' group='Points' ");
-
-        TwAddVarRW(bar, "Points Material", TW_TYPE_COLOR3F,
-            g_points_material,
-            " help='Points Ambient' group='Points' ");
-
-        TwAddVarRW(bar, "Points Shininess", TW_TYPE_FLOAT,
-            &g_points_material[3],
-            " min=1e-12 max=1000 help='Points Shininess' group='Points' ");
-    }
-
-    GLviz::display_callback(displayFunc);
-    GLviz::reshape_callback(reshapeFunc);
-    GLviz::close_callback(closeFunc);
-    GLviz::timer_callback(timerFunc, 15);
-
-    return GLviz::exec(camera);
+    return GLviz::exec(g_camera);
 }
