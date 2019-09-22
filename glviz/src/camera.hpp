@@ -24,8 +24,9 @@
 #define CAMERA_HPP
 
 #include <Eigen/Dense>
+#include <memory>
 
-#include "../src/trackball.hpp"
+class Trackball;
 
 namespace GLviz
 {
@@ -98,7 +99,7 @@ private:
 
     float m_begin_x, m_begin_y;
 
-    Trackball m_trackball;
+    std::unique_ptr<Trackball> m_trackball;
 };
 
 }

@@ -21,6 +21,7 @@
 // IN THE SOFTWARE.
 
 #include "camera.hpp"
+#include "trackball.hpp"
 
 using namespace Eigen;
 
@@ -29,7 +30,8 @@ namespace GLviz
 
 Camera::Camera()
     : m_position(Vector3f::Zero()),
-      m_orientation(Quaternionf::Identity())
+      m_orientation(Quaternionf::Identity()),
+      m_trackball(new Trackball())
 {
     set_perspective(60.0f, 4.0f / 3.0f, 0.25f, 10.0f);
 }
@@ -195,7 +197,8 @@ Camera::trackball_end_motion_rotate(float end_x, float end_y)
     float u1_x = 2.0f * end_x - 1.0f;
     float u1_y = 1.0f - 2.0f * end_y;
 
-    rotate(m_trackball(u0_x, u0_y, u1_x, u1_y));
+    auto& trackball = *m_trackball;
+    rotate(trackball(u0_x, u0_y, u1_x, u1_y));
 
     trackball_begin_motion(end_x, end_y);
 }
