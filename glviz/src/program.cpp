@@ -109,7 +109,7 @@ UniformBufferWireframe::set_buffer_data(float const* color,
 }
 
 UniformBufferCamera::UniformBufferCamera()
-    : glUniformBuffer(32 * sizeof(GLfloat))
+    : glUniformBuffer(48 * sizeof(GLfloat))
 {
 }
 
@@ -117,13 +117,16 @@ void
 UniformBufferCamera::set_buffer_data(Camera const& camera)
 {
     Matrix4f const& modelview_matrix = camera.get_modelview_matrix();
+    Matrix4f modelview_matrix_it = modelview_matrix.inverse().transpose();
     Matrix4f const& projection_matrix = camera.get_projection_matrix();
 
     bind();
-    glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(Matrix4f),
+    glBufferSubData(GL_UNIFORM_BUFFER, 0, 16 * sizeof(GLfloat),
         modelview_matrix.data());
     glBufferSubData(GL_UNIFORM_BUFFER, 16 * sizeof(GLfloat),
-        sizeof(Matrix4f), projection_matrix.data());
+        16 * sizeof(GLfloat), modelview_matrix_it.data());
+    glBufferSubData(GL_UNIFORM_BUFFER, 32 * sizeof(GLfloat),
+        16 * sizeof(GLfloat), projection_matrix.data());
     unbind();
 }
 

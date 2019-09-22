@@ -27,6 +27,7 @@
 layout(std140, column_major) uniform Camera
 {
     mat4 modelview_matrix;
+    mat4 modelview_matrix_it;
     mat4 projection_matrix;
 };
 
@@ -52,7 +53,7 @@ void main()
     vec4 position_eye = modelview_matrix * vec4(position, 1.0);
 
     #if SMOOTH
-        Out.normal = mat3(modelview_matrix) * normal;
+        Out.normal = mat3(modelview_matrix_it) * normal;
     #endif
     Out.position = vec3(position_eye);
 

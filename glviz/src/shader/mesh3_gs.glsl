@@ -28,6 +28,7 @@
 layout(std140, column_major) uniform Camera
 {
     mat4 modelview_matrix;
+    mat4 modelview_matrix_it;
     mat4 projection_matrix;
 };
 
@@ -82,7 +83,8 @@ void main()
     #endif
 
     #if !SMOOTH
-        vec3 normal = normalize(cross(In[1].position - In[0].position, In[2].position - In[0].position));
+        vec3 normal = normalize(cross(In[1].position - In[0].position,
+            In[2].position - In[0].position));
     #endif
     
     gl_Position = gl_in[0].gl_Position;
