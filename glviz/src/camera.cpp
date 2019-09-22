@@ -105,7 +105,9 @@ Camera::set_frustum(Frustum const& frustum)
 void
 Camera::set_perspective(float fovy, float aspect, float near_, float far_)
 {
-    m_fovy_rad = (static_cast<float>(M_PI) / 180.0f) * fovy;
+    float const pi = 3.14159265358979323846f;
+
+    m_fovy_rad = pi / 180.0f * fovy;
     m_aspect = aspect;
 
     m_frustum.top() = std::tan(m_fovy_rad / 2.0f) * near_;
