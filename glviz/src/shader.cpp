@@ -252,7 +252,7 @@ glProgram::set_uniform_1i(GLchar const* name, GLint value)
         throw uniform_not_found_error(name);
     }
 
-    glUniform1i(location, value);
+    glProgramUniform1i(m_program_obj, location, value);
 }
 
 void
