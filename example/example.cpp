@@ -1,6 +1,6 @@
 // This file is part of GLviz.
 //
-// Copyright(c) 2014, 2015 Sebastian Lipponer
+// Copyright(c) 2014-2018 Sebastian Lipponer
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files(the "Software"), to deal
@@ -361,7 +361,7 @@ load_triangle_mesh(std::string const& filename)
 int
 main(int argc, char* argv[])
 {
-    GLviz::init(argc, argv);
+    GLviz::GLviz();
   
     viz = std::unique_ptr<MyViz>(new MyViz());
     

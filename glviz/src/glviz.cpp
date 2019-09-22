@@ -1,6 +1,6 @@
 // This file is part of GLviz.
 //
-// Copyright(c) 2014, 2015 Sebastian Lipponer
+// Copyright(c) 2014-2018 Sebastian Lipponer
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files(the "Software"), to deal
@@ -42,8 +42,7 @@ namespace GLviz
 namespace
 {
 
-int m_opengl_major_version(3), m_opengl_minor_version(3);
-int m_screen_width(1280), m_screen_height(720);
+int m_screen_width, m_screen_height;
 unsigned int m_timer_msec = 16;
 
 SDL_Window* m_sdl_window;
@@ -263,8 +262,11 @@ cout_glew_version()
 }
 
 void
-init(int argc, char* argv[])
+GLviz(int screen_width, int screen_height)
 {
+    m_screen_width = screen_width;
+    m_screen_height = screen_height;
+
     // Initialize SDL.
     if (SDL_Init(SDL_INIT_VIDEO) < 0)
     {

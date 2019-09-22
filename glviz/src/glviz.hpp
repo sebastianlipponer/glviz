@@ -1,6 +1,6 @@
 // This file is part of GLviz.
 //
-// Copyright(c) 2014, 2015 Sebastian Lipponer
+// Copyright(c) 2014-2018 Sebastian Lipponer
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files(the "Software"), to deal
@@ -49,7 +49,7 @@ void     keyboard_callback(std::function<void (SDL_Keycode)>
 void     cout_opengl_version();
 void     cout_glew_version();
 
-void     init(int argc, char* argv[]);
+void     GLviz(int screen_width = 1920, int screen_height = 1080);
 int      exec(Camera& camera);
 
 }
