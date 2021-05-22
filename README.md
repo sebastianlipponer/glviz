@@ -1,9 +1,7 @@
 # GLviz
-[![Build badge](https://github.com/sebastianlipponer/glviz/actions/workflows/build.yml/badge.svg)](https://github.com/sebastianlipponer/glviz/actions?workflow=build)
+[![Build badge](https://github.com/sebastianlipponer/glviz/actions/workflows/build.yml/badge.svg)](https://github.com/sebastianlipponer/glviz/actions?workflow=build) [![license](https://img.shields.io/github/license/sebastianlipponer/glviz)](https://github.com/sebastianlipponer/glviz/blob/master/COPYING.MIT)
 
 GLviz is a small collection of C++ classes and GLSL shaders to facilitate the development of OpenGL demos. It is built on top of [CMake](http://www.cmake.org/), [SDL](http://libsdl.org), [GLEW](http://glew.sourceforge.net), [Eigen](http://eigen.tuxfamily.org/), and [ImGui](https://github.com/ocornut/imgui) and requires at least OpenGL 3.3. GLviz has been tested on a NVIDIA GTX 1080 Ti GPU using driver version 436.02 on Windows 10 (compiled with MSVC 2019) and 418.74 on Linux (compiled with GCC 8.3). It includes a script to easily download and build all external dependencies in the project directory to make compilation on either Windows or Linux as simple and convenient as possible.
-
-**Author**: [Sebastian Lipponer](http://sebastianlipponer.de), **License**: MIT
 
 ## Build
 
