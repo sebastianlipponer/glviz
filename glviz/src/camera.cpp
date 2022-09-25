@@ -85,11 +85,11 @@ Camera::set_modelview_matrix_from_orientation()
 
     m_modelview_matrix = Matrix4f::Identity();
 
-    Vector3f ori = dir * m_position;
+    Vector3f ori = - dir * m_position;
    
     // Translation * Rotation
     m_modelview_matrix.topLeftCorner(3, 3) = dir;
-    m_modelview_matrix.topRightCorner(3, 1) = m_position;
+    m_modelview_matrix.topRightCorner(3, 1) = ori;
 }
 
 void
