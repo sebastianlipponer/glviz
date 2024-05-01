@@ -279,7 +279,7 @@ gui()
     ImGui::SetWindowPos(ImVec2(3.0f, 3.0f), ImGuiCond_Once);
     ImGui::SetWindowSize(ImVec2(265.0f, 345.0f), ImGuiCond_Once);
 
-    ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth() * 0.55f);
+    ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x * 0.55f);
 
     ImGui::Text("time\t %.3f", g_time);
     ImGui::Text("fps \t %.1f fps", ImGui::GetIO().Framerate);
@@ -290,7 +290,7 @@ gui()
         ImGui::ColorEdit3("Mesh Color", g_mesh_material);
         ImGui::DragFloat("Mesh Shininess", &g_mesh_material[3],
             1e-2f, 1e-12f, 1000.0f);
-        ImGui::Combo("Mesh Shading", &g_shading_method, "Flat\0Phong\0\0");
+        ImGui::Combo("Mesh Shading", &g_shading_method, "Flat\0Phong\0");
 
         ImGui::Separator();
 

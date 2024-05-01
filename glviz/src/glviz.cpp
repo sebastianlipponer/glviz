@@ -26,7 +26,7 @@
 #include "camera.hpp"
 
 #include <imgui.h>
-#include <imgui_impl_sdl.h>
+#include <imgui_impl_sdl2.h>
 #include <imgui_impl_opengl3.h>
 
 #include <GL/glew.h>
@@ -346,9 +346,15 @@ GLviz(int screen_width, int screen_height)
     std::cout << std::endl;
 
     // Initialize ImGui.
+    IMGUI_CHECKVERSION();
     ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO(); (void)io;
+
+    ImGui::StyleColorsDark();
+
     ImGui_ImplSDL2_InitForOpenGL(m_sdl_window, m_gl_context);
-    ImGui_ImplOpenGL3_Init();
+    const char* glsl_version = "#version 330";
+    ImGui_ImplOpenGL3_Init(glsl_version);
 }
 
 int
@@ -376,7 +382,7 @@ exec(Camera& camera)
         if (m_display_callback) { m_display_callback(); }
 
         ImGui_ImplOpenGL3_NewFrame();
-        ImGui_ImplSDL2_NewFrame(m_sdl_window);
+        ImGui_ImplSDL2_NewFrame();
         ImGui::NewFrame();
 
         if (m_gui_callback) { m_gui_callback(); }
@@ -387,6 +393,10 @@ exec(Camera& camera)
     }
 
     if (m_close_callback) { m_close_callback(); }
+
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplSDL2_Shutdown();
+    ImGui::DestroyContext();
 
     SDL_GL_DeleteContext(m_gl_context);
     SDL_DestroyWindow(m_sdl_window);
